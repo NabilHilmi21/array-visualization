@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Search Visualization + Graph</title>
+  <link rel="stylesheet" href="index.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 gap-4">
+
+  <!-- HEADER -->
+  <h1 class="text-4xl font-bold text-slate-800 text-center">
+    Sequential vs Binary Search
+  </h1>
+
+  <!-- CONTROL CENTER -->
+  <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
+    <h2 class="font-bold text-2xl mb-3">Control Center</h2>
+    <hr class="border-slate-300 mb-4">
+
+    <div class="flex flex-wrap gap-3 mb-4">
+      <input
+        type="number"
+        id="targetArray"
+        placeholder="Target Number"
+        class="border border-gray-300 rounded-xl p-2 w-full sm:w-auto"
+      >
+      <input
+        type="number"
+        id="sizeArray"
+        placeholder="Array Size"
+        class="border border-gray-300 rounded-xl p-2 w-full sm:w-auto"
+      >
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <button onclick="generateArray()"
+        class="bg-blue-500 text-white rounded-xl px-6 py-2 hover:bg-blue-600 transition">
+        Generate
+      </button>
+      <button onclick="startSequential()"
+        class="bg-blue-500 text-white rounded-xl px-6 py-2 hover:bg-blue-600 transition">
+        Sequential Search
+      </button>
+      <button onclick="startBinary()"
+        class="bg-blue-500 text-white rounded-xl px-6 py-2 hover:bg-blue-600 transition">
+        Binary Search
+      </button>
+    </div>
+  </section>
+
+  <!-- VISUALIZATION -->
+  <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
+    <h2 class="font-bold text-2xl mb-3">Visualization</h2>
+
+    <div id="array"
+      class="flex flex-wrap justify-center items-center py-32 border border-dashed border-slate-300 rounded-lg mb-4">
+    </div>
+
+    <div>
+      <h3 class="font-semibold text-lg">Steps</h3>
+      <p id="steps" class="text-slate-700">-</p>
+    </div>
+  </section>
+
+  <!-- GRAPHS -->
+  <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5 space-y-6">
+    <div>
+      <h2 class="font-bold text-2xl mb-2">Graf Perbandingan Langkah</h2>
+      <canvas id="graph" class="w-full max-w-full" width="500" height="300"></canvas>
+    </div>
+
+    <hr class="border-slate-300">
+
+    <div>
+      <h2 class="font-bold text-2xl mb-2">Graf Big-O</h2>
+      <canvas id="bigOGraph" class="w-full max-w-full" width="520" height="320"></canvas>
+    </div>
+
+    <hr class="border-slate-300">
+
+    <div>
+      <h2 class="font-bold text-2xl mb-2">Graf Runtime</h2>
+      <canvas id="runtime" class="w-full max-w-full" width="500" height="300"></canvas>
+    </div>
+  </section>
+
+  <!-- TABLE -->
+  <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
+    <h2 class="font-bold text-2xl mb-3">Perbandingan Kompleksitas</h2>
+
+    <div class="overflow-x-auto">
+      <table class="w-full border border-slate-300 text-sm md:text-base">
+        <thead class="bg-slate-100">
+          <tr>
+            <th class="border px-4 py-2 text-left">Algoritma</th>
+            <th class="border px-4 py-2 text-left">Kompleksitas Waktu</th>
+            <th class="border px-4 py-2 text-left">Karakteristik</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="border px-4 py-2">Sequential Search</td>
+            <td class="border px-4 py-2 font-semibold">O(n)</td>
+            <td class="border px-4 py-2">
+              Mengecek data satu per satu dari awal sampai akhir
+            </td>
+          </tr>
+          <tr class="bg-slate-50">
+            <td class="border px-4 py-2">Binary Search</td>
+            <td class="border px-4 py-2 font-semibold">O(log n)</td>
+            <td class="border px-4 py-2">
+              Membagi data menjadi dua bagian setiap langkah (data harus terurut)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="mt-4">
+      <b>Kesimpulan:</b> Binary Search jauh lebih efisien dibandingkan Sequential Search
+      ketika jumlah data besar, terutama saat <b>n ≥ 16</b>.
+    </p>
+  </section>
+
+  <script src="index.js"></script>
+</body>
+</html>
