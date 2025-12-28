@@ -53,7 +53,7 @@ function render(active = -1, found = -1) {
 function startSequential() {
     if (currentInterval) clearInterval(currentInterval);
 
-    const startTime = performance.now(); // mulai hitung waktu
+    const startTime = performance.now(); 
 
     showLinear = true;
     drawBigOGraph();
@@ -66,7 +66,7 @@ function startSequential() {
         if (i >= data.length) {
             clearInterval(currentInterval);
 
-            const endTime = performance.now(); // ⬅️ DI SINI
+            const endTime = performance.now(); 
             runtimeData.linear.push({
                 steps: seqSteps,
                 time: endTime - startTime
@@ -238,7 +238,7 @@ function drawBigOGraph() {
     const logN = n.map(v => Math.log2(v));
     const maxY = Math.max(...linear);
 
-    // AXIS
+    // axis
     ctx.strokeStyle = "#94a3b8";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -289,7 +289,6 @@ function drawRuntimeGraph() {
 
     ctx.font = "12px sans-serif";
 
-    // ================= AXIS =================
     ctx.strokeStyle = "#cbd5e1";
     ctx.beginPath();
     ctx.moveTo(padding, padding);
@@ -316,7 +315,6 @@ function drawRuntimeGraph() {
     const maxY = Math.max(...allTimes);
     const maxX = Math.max(...allSteps);
 
-    // ================= Y AXIS NUMBERS =================
     ctx.fillStyle = "#475569";
     for (let i = 0; i <= 5; i++) {
         const value = (maxY / 5) * i;
@@ -331,7 +329,6 @@ function drawRuntimeGraph() {
         ctx.stroke();
     }
 
-    // ================= X AXIS NUMBERS =================
     ctx.fillStyle = "#475569";
     const uniqueSteps = [...new Set(allSteps)].sort((a, b) => a - b);
 
@@ -340,7 +337,6 @@ function drawRuntimeGraph() {
         ctx.fillText(s, x - 6, padding + height + 20);
     });
 
-    // ================= LINE DRAWER =================
     function drawLine(data, color, label, offsetY) {
         if (data.length === 0) return;
 
