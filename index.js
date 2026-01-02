@@ -15,29 +15,41 @@ let showLinear = false;
 let showBinary = false;
 
 function getTarget() {
-    return Number(document.getElementById("targetArray").value);
+    return document.getElementById("targetArray").value.trim().toLowerCase();
 }
 
-function generateArray() {
+async function generateArray() {
     let size = Number(document.getElementById("sizeArray").value);
-    data = [];
 
-    for (let i = 0; i < size; i++) {
-        data.push(Math.floor(Math.random() * 100));
+    if (!size || size <= 0) {
+        alert("Masukkan ukuran array yang valid");
+        return;
     }
 
-    seqSteps = 0;
-    binSteps = 0;
-    animSeq = 0;
-    animBin = 0;
+    if (size > 100) {
+        alert("Maksimal 100 data untuk demo");
+        return;
+    }
 
-    showLinear = false;
-    showBinary = false;
+    try {
+        const res = await fetch(`https://randomuser.me/api/?results=${size}&nat=id`);
+        const json = await res.json();
+
+        data = json.results.map(user =>
+            `${user.name.first} ${user.name.last}`
+        );
+    } catch (err) {
+        alert("Gagal mengambil data dari API");
+        console.error(err);
+        return;
+    }
+
+    seqSteps = binSteps = animSeq = animBin = 0;
+    showLinear = showBinary = false;
 
     render();
     drawBigOGraph();
 }
-
 
 function render(active = -1, found = -1) {
     let html = "";
@@ -53,8 +65,7 @@ function render(active = -1, found = -1) {
 function startSequential() {
     if (currentInterval) clearInterval(currentInterval);
 
-    const startTime = performance.now(); 
-
+    const startTime = performance.now();
     showLinear = true;
     drawBigOGraph();
 
@@ -65,14 +76,10 @@ function startSequential() {
     currentInterval = setInterval(() => {
         if (i >= data.length) {
             clearInterval(currentInterval);
-
-            const endTime = performance.now(); 
             runtimeData.linear.push({
                 steps: seqSteps,
-                time: endTime - startTime
+                time: performance.now() - startTime
             });
-
-
             drawRuntimeGraph();
             drawGraph();
             return;
@@ -81,15 +88,15 @@ function startSequential() {
         seqSteps++;
         render(i);
         document.getElementById("steps").innerText =
-            `Sequential steps: ${seqSteps}`;
+            `Sequential: membandingkan "${target}" dengan "${data[i]}"`;
 
-        if (data[i] === target) {
+        if (data[i].toLowerCase() === target) {
             render(-1, i);
             clearInterval(currentInterval);
 
             runtimeData.linear.push({
                 steps: seqSteps,
-                time: endTime - startTime
+                time: performance.now() - startTime
             });
 
             drawRuntimeGraph();
@@ -103,13 +110,12 @@ function startSequential() {
 function startBinary() {
     if (currentInterval) clearInterval(currentInterval);
 
-    const startTime = performance.now(); 
-
+    const startTime = performance.now();
     showBinary = true;
     drawBigOGraph();
 
     let target = getTarget();
-    data.sort((a, b) => a - b);
+    data.sort((a, b) => a.localeCompare(b));
     render();
 
     let left = 0;
@@ -119,39 +125,36 @@ function startBinary() {
     currentInterval = setInterval(() => {
         if (left > right) {
             clearInterval(currentInterval);
-
-            const endTime = performance.now(); 
             runtimeData.binary.push({
                 steps: binSteps,
-                time: endTime - startTime
+                time: performance.now() - startTime
             });
-
             drawRuntimeGraph();
             drawGraph();
             return;
         }
 
-
         binSteps++;
         let mid = Math.floor((left + right) / 2);
         render(mid);
-        document.getElementById("steps").innerText =
-            `Binary steps: ${binSteps}`;
 
-        if (data[mid] === target) {
+        document.getElementById("steps").innerText =
+            `Binary: bandingkan "${target}" dengan "${data[mid]}"`;
+
+        const midVal = data[mid].toLowerCase();
+
+        if (midVal === target) {
             render(-1, mid);
             clearInterval(currentInterval);
 
-            const endTime = performance.now();
             runtimeData.binary.push({
                 steps: binSteps,
-                time: endTime - startTime
+                time: performance.now() - startTime
             });
-
 
             drawRuntimeGraph();
             drawGraph();
-        } else if (data[mid] < target) {
+        } else if (midVal < target) {
             left = mid + 1;
         } else {
             right = mid - 1;

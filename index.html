@@ -10,9 +10,10 @@
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 gap-4">
 
     <!-- HEADER -->
-    <h1 class="text-4xl font-bold text-slate-800 text-center">
+    <h1 class="text-4xl font-bold text-center">
         Sequential vs Binary Search
     </h1>
+    <h2 class="text-slate-500">Membandingkan cara mencari nama menggunakan dua algoritma (Sequential dan Binary)</h2>
 
     <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
         <h2 class="font-bold text-2xl mb-3">How to Use</h2>
@@ -21,7 +22,7 @@
         <p class="text-slate-700">
         1. Masukkan <b>Array Size</b> terlebih dahulu (misal: 20)<br>
         2. Lalu, klik tombol <b>Generate</b> untuk membuat array acak<br>
-        3. Masukkan <b>Target Number</b> yang ingin dicari (misal: 15)<br>
+        3. Masukkan <b>Target Nama</b> yang ingin dicari (misal: 15)<br>
         4. Klik tombol <b>Sequential Search</b> atau <b>Binary Search</b> untuk memulai pencarian<br>
         5. Amati visualisasi pencarian, langkah-langkah yang diambil, serta grafik perbandingan<br>
         6. Ulangi langkah di atas dengan ukuran array dan target number yang berbeda untuk melihat perbedaan performa kedua algoritma
@@ -36,11 +37,12 @@
 
         <div class="flex flex-wrap gap-3 mb-4">
         <input
-            type="number"
+            type="text"
             id="targetArray"
-            placeholder="Target Number"
+            placeholder="Target Nama"
             class="border border-gray-300 rounded-xl p-2 w-full sm:w-auto"
-        >
+        />
+
         <input
             type="number"
             id="sizeArray"
