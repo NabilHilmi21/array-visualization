@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Search Algorithm Visualizer</title>
+    <title>Linear Search Visualizer</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
@@ -13,10 +13,10 @@
     <!-- HEADER -->
     <header class="text-center space-y-2">
         <h1 class="text-4xl font-bold tracking-tight">
-            Search Algorithm Visualizer
+            Linear Search Visualizer
         </h1>
         <p class="text-slate-600">
-            Perbandingan Linear Search vs Binary Search
+            Perbandingan Linear Search Iteratif vs Rekursif
         </p>
     </header>
 
@@ -35,18 +35,19 @@
 
             <button onclick="generateArray()"
                 class="bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700">
-                Generate
+                Generate Data
             </button>
         </div>
 
         <div class="flex gap-3">
-            <button onclick="startSequential()"
-                class="bg-emerald-500 text-white px-6 py-2 rounded-xl">
-                Linear Search
-            </button>
-            <button onclick="startBinary()"
+            <button onclick="startLinearIterative()"
                 class="bg-indigo-500 text-white px-6 py-2 rounded-xl">
-                Binary Search
+                Linear Iteratif
+            </button>
+
+            <button onclick="startLinearRecursive()"
+                class="bg-emerald-500 text-white px-6 py-2 rounded-xl">
+                Linear Rekursif
             </button>
         </div>
     </section>
