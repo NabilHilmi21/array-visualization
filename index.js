@@ -1,380 +1,216 @@
+const MAX_VISUAL = 200;
+
 let data = [];
 let seqSteps = 0;
 let binSteps = 0;
-let animSeq = 0;
-let animBin = 0;
-
-let runtimeData = {
-    linear: [],
-    binary: []
-};
-
+let seqTime = 0;
+let binTime = 0;
 let currentInterval = null;
 
-let showLinear = false;
-let showBinary = false;
-
 function getTarget() {
-    return document.getElementById("targetArray").value.trim().toLowerCase();
+    return document.getElementById("targetArray").value.toLowerCase().trim();
 }
 
 async function generateArray() {
-    let size = Number(document.getElementById("sizeArray").value);
-
-    if (!size || size <= 0) {
-        alert("Masukkan ukuran array yang valid");
+    const size = Number(document.getElementById("sizeArray").value);
+    if (!size || size <= 0 || size > 1000) {
+        alert("Masukkan ukuran 1–1000");
         return;
     }
 
-    if (size > 100) {
-        alert("Maksimal 100 data untuk demo");
-        return;
-    }
+    const res = await fetch(`https://randomuser.me/api/?results=${size}&nat=id`);
+    const json = await res.json();
 
-    try {
-        const res = await fetch(`https://randomuser.me/api/?results=${size}&nat=id`);
-        const json = await res.json();
-
-        data = json.results.map(user =>
-            `${user.name.first} ${user.name.last}`
-        );
-    } catch (err) {
-        alert("Gagal mengambil data dari API");
-        console.error(err);
-        return;
-    }
-
-    seqSteps = binSteps = animSeq = animBin = 0;
-    showLinear = showBinary = false;
+    data = json.results.map(u =>
+        `${u.name.first} ${u.name.last}`.toLowerCase()
+    );
 
     render();
     drawBigOGraph();
 }
 
 function render(active = -1, found = -1) {
-    let html = "";
-    for (let i = 0; i < data.length; i++) {
-        let cls = "box";
-        if (i === active) cls += " active";
-        if (i === found) cls += " found";
-        html += `<div class="${cls}">${data[i]}</div>`;
+    const container = document.getElementById("array");
+
+    if (data.length > MAX_VISUAL) {
+        container.innerHTML =
+            `<p class="text-slate-500 text-center">
+            Dataset ${data.length} data<br>Visualisasi dimatikan
+            </p>`;
+        return;
     }
-    document.getElementById("array").innerHTML = html;
+
+    container.innerHTML = data.map((v, i) => {
+        let cls = "px-3 py-1 rounded-lg text-sm border";
+        if (i === active) cls += " bg-yellow-200";
+        else if (i === found) cls += " bg-emerald-300";
+        else cls += " bg-slate-50";
+        return `<div class="${cls}">${v}</div>`;
+    }).join("");
 }
 
 function startSequential() {
     if (currentInterval) clearInterval(currentInterval);
-
-    const startTime = performance.now();
-    showLinear = true;
-    drawBigOGraph();
-
-    let target = getTarget();
+    const target = getTarget();
     let i = 0;
     seqSteps = 0;
+    const start = performance.now();
 
     currentInterval = setInterval(() => {
         if (i >= data.length) {
+            seqTime = performance.now() - start;
             clearInterval(currentInterval);
-            runtimeData.linear.push({
-                steps: seqSteps,
-                time: performance.now() - startTime
-            });
-            drawRuntimeGraph();
-            drawGraph();
+            drawAllGraphs();
             return;
         }
 
         seqSteps++;
         render(i);
         document.getElementById("steps").innerText =
-            `Sequential: membandingkan "${target}" dengan "${data[i]}"`;
+            `Linear: ${data[i]}`;
 
-        if (data[i].toLowerCase() === target) {
+        if (data[i] === target) {
+            seqTime = performance.now() - start;
             render(-1, i);
             clearInterval(currentInterval);
-
-            runtimeData.linear.push({
-                steps: seqSteps,
-                time: performance.now() - startTime
-            });
-
-            drawRuntimeGraph();
-            drawGraph();
+            drawAllGraphs();
         }
-
         i++;
-    }, 200);
+    }, 120);
 }
 
 function startBinary() {
     if (currentInterval) clearInterval(currentInterval);
-
-    const startTime = performance.now();
-    showBinary = true;
-    drawBigOGraph();
-
-    let target = getTarget();
-    data.sort((a, b) => a.localeCompare(b));
-    render();
-
-    let left = 0;
-    let right = data.length - 1;
+    data.sort();
+    const target = getTarget();
+    let left = 0, right = data.length - 1;
     binSteps = 0;
+    const start = performance.now();
 
     currentInterval = setInterval(() => {
         if (left > right) {
+            binTime = performance.now() - start;
             clearInterval(currentInterval);
-            runtimeData.binary.push({
-                steps: binSteps,
-                time: performance.now() - startTime
-            });
-            drawRuntimeGraph();
-            drawGraph();
+            drawAllGraphs();
             return;
         }
 
         binSteps++;
-        let mid = Math.floor((left + right) / 2);
+        const mid = Math.floor((left + right) / 2);
         render(mid);
-
         document.getElementById("steps").innerText =
-            `Binary: bandingkan "${target}" dengan "${data[mid]}"`;
+            `Binary: ${data[mid]}`;
 
-        const midVal = data[mid].toLowerCase();
-
-        if (midVal === target) {
+        if (data[mid] === target) {
+            binTime = performance.now() - start;
             render(-1, mid);
             clearInterval(currentInterval);
-
-            runtimeData.binary.push({
-                steps: binSteps,
-                time: performance.now() - startTime
-            });
-
-            drawRuntimeGraph();
-            drawGraph();
-        } else if (midVal < target) {
-            left = mid + 1;
-        } else {
-            right = mid - 1;
-        }
-    }, 300);
+            drawAllGraphs();
+        } else if (data[mid] < target) left = mid + 1;
+        else right = mid - 1;
+    }, 220);
 }
 
-function drawGraph() {
-    let canvas = document.getElementById("graph");
-    let ctx = canvas.getContext("2d");
+/* ================= GRAPH ================= */
 
-    let startSeq = animSeq;
-    let startBin = animBin;
-    let endSeq = seqSteps;
-    let endBin = binSteps;
+function drawAllGraphs() {
+    drawStepGraph();
+    drawRuntimeGraph();
+}
 
-    let startTime = performance.now();
-    let duration = 400;
+function drawStepGraph() {
+    const c = document.getElementById("graph");
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, c.width, c.height);
 
-    function animate(time) {
-        let t = Math.min((time - startTime) / duration, 1);
-        animSeq = startSeq + (endSeq - startSeq) * t;
-        animBin = startBin + (endBin - startBin) * t;
+    ctx.font = "14px sans-serif";
+    ctx.textAlign = "center";
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const max = Math.max(seqSteps, binSteps, 1);
+    const scale = 160 / max;
 
-        // axis
-        ctx.strokeStyle = "#94a3b8";
-        ctx.beginPath();
-        ctx.moveTo(50, 20);
-        ctx.lineTo(50, 260);
-        ctx.lineTo(460, 260);
-        ctx.stroke();
+    // Linear
+    ctx.fillStyle = "#ef4444";
+    const linearH = seqSteps * scale;
+    ctx.fillRect(90, 200 - linearH, 60, linearH);
+    ctx.fillText(seqSteps + " steps", 120, 190 - linearH);
+    ctx.fillText("Linear", 120, 220);
 
-        ctx.fillStyle = "#000";
-        ctx.fillText("Steps", 10, 30);
-        ctx.fillText("Sequential", 140, 285);
-        ctx.fillText("Binary", 330, 285);
-
-        let max = Math.max(animSeq, animBin, 1);
-        let scale = 200 / max;
-
-        let seqY = 260 - animSeq * scale;
-        let binY = 260 - animBin * scale;
-
-        ctx.strokeStyle = "#38bdf8";
-        ctx.beginPath();
-        ctx.moveTo(150, seqY);
-        ctx.lineTo(350, binY);
-        ctx.stroke();
-
-        ctx.fillStyle = "#38bdf8";
-        ctx.beginPath();
-        ctx.arc(150, seqY, 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#22c55e";
-        ctx.beginPath();
-        ctx.arc(350, binY, 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#000";
-        ctx.fillText(Math.round(animSeq) + " steps", 120, seqY - 10);
-        ctx.fillText(Math.round(animBin) + " steps", 320, binY - 10);
-
-        if (t < 1) requestAnimationFrame(animate);
-    }
-
-    requestAnimationFrame(animate);
+    // Binary
+    ctx.fillStyle = "#6366f1";
+    const binaryH = binSteps * scale;
+    ctx.fillRect(200, 200 - binaryH, 60, binaryH);
+    ctx.fillText(binSteps + " steps", 230, 190 - binaryH);
+    ctx.fillText("Binary", 230, 220);
 }
 
 function drawBigOGraph() {
-    const canvas = document.getElementById("bigOGraph");
-    const ctx = canvas.getContext("2d");
+    const c = document.getElementById("bigOGraph");
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, c.width, c.height);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const padding = 50;
-    const width = canvas.width - padding * 2;
-    const height = canvas.height - padding * 2;
+    ctx.font = "13px sans-serif";
 
     const n = [1, 2, 4, 8, 16, 32, 64];
     const linear = n.map(v => v);
     const logN = n.map(v => Math.log2(v));
-    const maxY = Math.max(...linear);
 
-    // axis
-    ctx.strokeStyle = "#94a3b8";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, padding + height);
-    ctx.lineTo(padding + width, padding + height);
-    ctx.stroke();
+    const max = Math.max(...linear);
 
-    ctx.fillStyle = "#000";
-    ctx.font = "12px sans-serif";
-    ctx.fillText("Operations", 5, padding);
-    ctx.fillText("n", padding + width + 5, padding + height + 5);
-
-    function drawLine(data, color, label, offsetY) {
+    function drawLine(data, color) {
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
         ctx.beginPath();
-
-        data.forEach((val, i) => {
-            const x = padding + (i / (data.length - 1)) * width;
-            const y = padding + height - (val / maxY) * height;
-
+        data.forEach((v, i) => {
+            const x = 50 + i * 40;
+            const y = 200 - (v / max) * 140;
             if (i === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         });
-
         ctx.stroke();
-
-        // label
-        ctx.fillStyle = color;
-        ctx.fillText(label, padding + 10, padding + offsetY);
     }
 
-    if (showLinear) drawLine(linear, "#ef4444", "O(n) - Linear Search", 15);
-    if (showBinary) drawLine(logN, "#22c55e", "O(log n) - Binary Search", 30);
-}
-
-
-function drawRuntimeGraph() {
-    const canvas = document.getElementById("runtime");
-    const ctx = canvas.getContext("2d");
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const padding = 50;
-    const width = canvas.width - padding * 2;
-    const height = canvas.height - padding * 2;
-
-    ctx.font = "12px sans-serif";
-
+    // Axes
     ctx.strokeStyle = "#cbd5e1";
     ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, padding + height);
-    ctx.lineTo(padding + width, padding + height);
+    ctx.moveTo(40, 20);
+    ctx.lineTo(40, 210);
+    ctx.lineTo(330, 210);
     ctx.stroke();
 
-    ctx.fillStyle = "#334155";
-    ctx.fillText("Time (ms)", 10, padding + 20);
-    ctx.fillText("Steps", padding + width - 30, padding + height + 30);
+    drawLine(linear, "#ef4444"); // O(n)
+    drawLine(logN, "#22c55e");   // O(log n)
 
-    const allTimes = [
-        ...runtimeData.linear.map(d => d.time),
-        ...runtimeData.binary.map(d => d.time),
-        1
-    ];
+    ctx.fillStyle = "#ef4444";
+    ctx.fillRect(230, 30, 12, 12);
+    ctx.fillText("O(n) – Linear Search", 250, 40);
 
-    const allSteps = [
-        ...runtimeData.linear.map(d => d.steps),
-        ...runtimeData.binary.map(d => d.steps),
-        1
-    ];
+    ctx.fillStyle = "#22c55e";
+    ctx.fillRect(230, 55, 12, 12);
+    ctx.fillText("O(log n) – Binary Search", 250, 65);
+}
 
-    const maxY = Math.max(...allTimes);
-    const maxX = Math.max(...allSteps);
+function drawRuntimeGraph() {
+    const c = document.getElementById("runtimeGraph");
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, c.width, c.height);
 
-    ctx.fillStyle = "#475569";
-    for (let i = 0; i <= 5; i++) {
-        const value = (maxY / 5) * i;
-        const y = padding + height - (i / 5) * height;
+    ctx.font = "14px sans-serif";
+    ctx.textAlign = "center";
 
-        ctx.fillText(value.toFixed(1), 10, y + 4);
+    const max = Math.max(seqTime, binTime, 1);
+    const scale = 160 / max;
 
-        ctx.strokeStyle = "#e5e7eb";
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(padding + width, y);
-        ctx.stroke();
-    }
+    // Linear
+    ctx.fillStyle = "#ef4444";
+    const lH = seqTime * scale;
+    ctx.fillRect(90, 200 - lH, 60, lH);
+    ctx.fillText(seqTime.toFixed(2) + " ms", 120, 190 - lH);
+    ctx.fillText("Linear", 120, 220);
 
-    ctx.fillStyle = "#475569";
-    const uniqueSteps = [...new Set(allSteps)].sort((a, b) => a - b);
-
-    uniqueSteps.forEach(s => {
-        const x = padding + (s / maxX) * width;
-        ctx.fillText(s, x - 6, padding + height + 20);
-    });
-
-    function drawLine(data, color, label, offsetY) {
-        if (data.length === 0) return;
-
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-
-        data.forEach((d, i) => {
-            const x = padding + (d.steps / maxX) * width;
-            const y = padding + height - (d.time / maxY) * height;
-
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-
-            // titik
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            // label waktu
-            ctx.fillText(
-                d.time.toFixed(2) + " ms",
-                x + 6,
-                y - 6
-            );
-        });
-
-        ctx.stroke();
-
-        // legend
-        ctx.fillStyle = color;
-        ctx.fillText(label, padding + 10, padding + offsetY);
-    }
-
-    drawLine(runtimeData.linear, "#ef4444", "Linear Runtime", 15);
-    drawLine(runtimeData.binary, "#22c55e", "Binary Runtime", 30);
+    // Binary
+    ctx.fillStyle = "#6366f1";
+    const bH = binTime * scale;
+    ctx.fillRect(200, 200 - bH, 60, bH);
+    ctx.fillText(binTime.toFixed(2) + " ms", 230, 190 - bH);
+    ctx.fillText("Binary", 230, 220);
 }

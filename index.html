@@ -2,140 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Search Visualization + Graph</title>
-    <link rel="stylesheet" href="index.css">
+    <title>Search Algorithm Visualizer</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4 gap-4">
+<body class="bg-slate-100 min-h-screen flex justify-center px-4 py-10">
+
+<main class="w-full max-w-6xl space-y-8">
 
     <!-- HEADER -->
-    <h1 class="text-4xl font-bold text-center">
-        Sequential vs Binary Search
-    </h1>
-    <h2 class="text-slate-500">Membandingkan cara mencari nama menggunakan dua algoritma (Sequential dan Binary)</h2>
-
-    <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
-        <h2 class="font-bold text-2xl mb-3">How to Use</h2>
-        <hr class="border-slate-300 mb-4">
-
-        <p class="text-slate-700">
-        1. Masukkan <b>Array Size</b> terlebih dahulu (misal: 20)<br>
-        2. Lalu, klik tombol <b>Generate</b> untuk membuat array acak<br>
-        3. Masukkan <b>Target Nama</b> yang ingin dicari (misal: 15)<br>
-        4. Klik tombol <b>Sequential Search</b> atau <b>Binary Search</b> untuk memulai pencarian<br>
-        5. Amati visualisasi pencarian, langkah-langkah yang diambil, serta grafik perbandingan<br>
-        6. Ulangi langkah di atas dengan ukuran array dan target number yang berbeda untuk melihat perbedaan performa kedua algoritma
+    <header class="text-center space-y-2">
+        <h1 class="text-4xl font-bold tracking-tight">
+            Search Algorithm Visualizer
+        </h1>
+        <p class="text-slate-600">
+            Perbandingan Linear Search vs Binary Search
         </p>
+    </header>
 
-    </section>
+    <!-- CONTROL -->
+    <section class="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+        <h2 class="text-xl font-semibold">Control Panel</h2>
 
-    <!-- CONTROL CENTER -->
-    <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
-        <h2 class="font-bold text-2xl mb-3">Control Center</h2>
-        <hr class="border-slate-300 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input id="sizeArray" type="number"
+                placeholder="Array size (1–1000)"
+                class="border rounded-xl px-4 py-3">
 
-        <div class="flex flex-wrap gap-3 mb-4">
-        <input
-            type="text"
-            id="targetArray"
-            placeholder="Target Nama"
-            class="border border-gray-300 rounded-xl p-2 w-full sm:w-auto"
-        />
+            <input id="targetArray" type="text"
+                placeholder="Target name"
+                class="border rounded-xl px-4 py-3">
 
-        <input
-            type="number"
-            id="sizeArray"
-            placeholder="Array Size"
-            class="border border-gray-300 rounded-xl p-2 w-full sm:w-auto"
-        >
+            <button onclick="generateArray()"
+                class="bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700">
+                Generate
+            </button>
         </div>
 
-        <div class="flex flex-wrap gap-3">
-        <button onclick="generateArray()"
-            class="bg-blue-500 text-white rounded-xl px-6 py-2 hover:bg-blue-600 transition">
-            Generate
-        </button>
-        <button onclick="startSequential()"
-            class="bg-blue-500 text-white rounded-xl px-6 py-2 hover:bg-blue-600 transition">
-            Sequential Search
-        </button>
-        <button onclick="startBinary()"
-            class="bg-blue-500 text-white rounded-xl px-6 py-2 hover:bg-blue-600 transition">
-            Binary Search
-        </button>
+        <div class="flex gap-3">
+            <button onclick="startSequential()"
+                class="bg-emerald-500 text-white px-6 py-2 rounded-xl">
+                Linear Search
+            </button>
+            <button onclick="startBinary()"
+                class="bg-indigo-500 text-white px-6 py-2 rounded-xl">
+                Binary Search
+            </button>
         </div>
     </section>
 
-    <!-- VISUALIZATION -->
-    <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
-        <h2 class="font-bold text-2xl mb-3">Visualization</h2>
+    <!-- VISUAL -->
+    <section class="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+        <h2 class="text-xl font-semibold">Visualization</h2>
 
         <div id="array"
-        class="flex flex-wrap justify-center items-center py-32 border border-dashed border-slate-300 rounded-lg mb-4">
+            class="flex flex-wrap justify-center gap-2 min-h-[180px]
+                   border border-dashed rounded-xl p-4">
         </div>
 
-        <div>
-        <h3 class="font-semibold text-lg">Steps</h3>
-        <p id="steps" class="text-slate-700">-</p>
-        </div>
+        <p id="steps" class="text-center text-slate-600 text-sm">-</p>
     </section>
 
     <!-- GRAPHS -->
-    <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5 space-y-6">
-        <div>
-        <h2 class="font-bold text-2xl mb-2">Graf Perbandingan Langkah</h2>
-        <canvas id="graph" class="w-full max-w-full" width="500" height="300"></canvas>
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <div class="bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="font-semibold mb-2">Steps Comparison</h2>
+            <canvas id="graph" width="350" height="250"></canvas>
         </div>
 
-        <hr class="border-slate-300">
-
-        <div>
-        <h2 class="font-bold text-2xl mb-2">Graf Big-O</h2>
-        <canvas id="bigOGraph" class="w-full max-w-full" width="520" height="320"></canvas>
+        <div class="bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="font-semibold mb-2">Big-O Complexity</h2>
+            <canvas id="bigOGraph" width="350" height="250"></canvas>
         </div>
 
-        <hr class="border-slate-300">
-
-        <div>
-        <h2 class="font-bold text-2xl mb-2">Graf Runtime</h2>
-        <canvas id="runtime" class="w-full max-w-full" width="500" height="300"></canvas>
+        <div class="bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="font-semibold mb-2">Running Time</h2>
+            <canvas id="runtimeGraph" width="350" height="250"></canvas>
         </div>
+
     </section>
 
-    <!-- TABLE -->
-    <section class="bg-white p-6 rounded-xl shadow-lg w-full lg:w-5/6 xl:w-3/5">
-        <h2 class="font-bold text-2xl mb-3">Perbandingan Kompleksitas</h2>
+</main>
 
-        <div class="overflow-x-auto">
-        <table class="w-full border border-slate-300 text-sm md:text-base">
-            <thead class="bg-slate-100">
-            <tr>
-                <th class="border px-4 py-2 text-left">Algoritma</th>
-                <th class="border px-4 py-2 text-left">Kompleksitas Waktu</th>
-                <th class="border px-4 py-2 text-left">Karakteristik</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td class="border px-4 py-2">Sequential Search</td>
-                <td class="border px-4 py-2 font-semibold">O(n)</td>
-                <td class="border px-4 py-2">
-                Mengecek data satu per satu dari awal sampai akhir
-                </td>
-            </tr>
-            <tr class="bg-slate-50">
-                <td class="border px-4 py-2">Binary Search</td>
-                <td class="border px-4 py-2 font-semibold">O(log n)</td>
-                <td class="border px-4 py-2">
-                Membagi data menjadi dua bagian setiap langkah (data harus terurut)
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        </div>
-    </section>
-
-    <script src="index.js"></script>
+<script src="index.js"></script>
 </body>
 </html>
